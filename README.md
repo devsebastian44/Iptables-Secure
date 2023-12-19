@@ -15,7 +15,7 @@ Aquí hay algunas de las cosas para las que se utiliza iptables:
 Este script te servirá para configurar Iptables de manera fácil y rápida para mantener tu servidor seguro.
 
 ```
-git clone https://github.com/SebastianZhunaula/Iptables-secure.git
+git clone https://github.com/Devsebastian31/Iptables-secure.git
 
 cd Iptables-secure
 
