@@ -4,8 +4,7 @@
   <img src="./Img/Logo.png" height="300px" width="350px">
 </p>
 
-**iptables** es una herramienta de firewall para sistemas Linux que permite configurar y gestionar reglas de filtrado de paquetes en el kernel.  
-Este proyecto incluye un script para configurar iptables de manera fácil y rápida, manteniendo tu servidor seguro.
+**iptables** es una herramienta de firewall para sistemas Linux que permite configurar y gestionar reglas de filtrado de paquetes en el kernel. Este proyecto incluye un script para configurar iptables de manera fácil y rápida, manteniendo tu servidor seguro.
 
 ---
 
@@ -40,5 +39,4 @@ sudo python3 Iptables.py
 
 ## 📜 Licencia
 
-Este proyecto está bajo la licencia GPL.  
-Puedes usarlo libremente con fines educativos y de investigación.
+Este proyecto está bajo la licencia GPL. Puedes usarlo libremente con fines educativos y de investigación.
