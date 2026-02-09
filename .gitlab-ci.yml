@@ -1,0 +1,33 @@
+stages:
+  - lint
+  - test
+  - security
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - python --version
+  - python -m venv venv
+  - source venv/bin/activate
+  - pip install flake8 pytest bandit
+
+lint:
+  stage: lint
+  script:
+    - flake8 src/ --config=configs/setup.cfg
+
+unit_test:
+  stage: test
+  script:
+    - pytest tests/ -c configs/setup.cfg
+
+security_scan:
+  stage: security
+  script:
+    - bandit -r src/
