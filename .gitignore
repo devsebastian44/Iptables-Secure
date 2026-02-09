@@ -29,4 +29,3 @@ ENV/
 *.log
 *.rules
 *.backup
-scripts/publish_public.ps1
