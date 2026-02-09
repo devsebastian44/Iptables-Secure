@@ -1,4 +1,36 @@
-# Python
+# =============================================================================
+# .gitignore para Iptables Secure Manager - Proyecto de Ciberseguridad Educativo
+# =============================================================================
+
+# =============================================================================
+# ARCHIVOS SENSIBLES DE CIBERSEGURIDAD (GitHub Público)
+# =============================================================================
+# Note: tests/ directory is included for GitLab CI/CD
+# Logs and backups are excluded
+*.log
+iptables_backup_*.rules
+iptables_rules.log
+
+# =============================================================================
+# LOGS Y BACKUPS (Privados para GitLab)
+# =============================================================================
+*.log
+*.logs
+logs/
+backups/
+iptables_backup_*
+iptables_rules_*
+
+# =============================================================================
+# ENTORNOS VIRTUALES Y DEPENDENCIAS
+# =============================================================================
+.env
+.venv
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,13 +51,106 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Labs & Environments
-.venv/
-venv/
-ENV/
+# =============================================================================
+# IDE Y EDITORES
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Project Specific
-*.log
-*.rules
+# =============================================================================
+# CONFIGURACIONES SENSIBLES
+# =============================================================================
+config.local.*
+secrets.yaml
+secrets.json
+*.key
+*.pem
+*.crt
+*.p12
+credentials/
+.secrets/
+
+# =============================================================================
+# TESTING Y COVERAGE
+# =============================================================================
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# =============================================================================
+# DOCUMENTACIÓN TEMPORAL
+# =============================================================================
+docs/_build/
+docs/build/
+*.tmp
+*.temp
+.cache/
+
+# =============================================================================
+# ARTIFACTOS DE CI/CD
+# =============================================================================
+# Note: .gitlab-ci.yml is included for GitLab CI/CD
+.github/
+ci/
+artifacts/
+reports/
+
+# =============================================================================
+# SISTEMAS OPERATIVOS
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# VARIABLES DE ENTORNO Y CONFIGURACIONES
+# =============================================================================
+.env.local
+.env.development
+.env.test
+.env.production
+config.ini
+settings.local.py
+
+# =============================================================================
+# SCRIPTS TEMPORALES Y EJECUTABLES
+# =============================================================================
+*.sh~
+*.py~
+*.bak
 *.backup
+*.orig
+*.rej
+
+# =============================================================================
+# DATASETS Y ARCHIVOS DE DATOS (Educacionales)
+# =============================================================================
+data/raw/
+data/processed/
+*.csv
+*.json
+*.xml
+*.db
+*.sqlite
+*.sqlite3
