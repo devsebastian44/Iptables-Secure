@@ -88,28 +88,29 @@ test:integration:
     - pip install --upgrade pip
   script:
     - echo "Ejecutando pruebas de integración..."
-    - python -c "
-import sys
-sys.path.append('src')
-try:
-    from Iptables import validar_ip, validar_puerto
-    print('✅ Importación exitosa')
-    
-    # Test validación IP
-    assert validar_ip('192.168.1.1') == True
-    assert validar_ip('256.256.256.256') == False
-    print('✅ Validación IP funciona')
-    
-    # Test validación puerto
-    assert validar_puerto('80') == True
-    assert validar_puerto('65536') == False
-    print('✅ Validación puerto funciona')
-    
-    print('✅ Todas las pruebas de integración pasaron')
-except Exception as e:
-    print(f'❌ Error: {e}')
-    sys.exit(1)
-"
+    - |
+      python -c "
+      import sys
+      sys.path.append('src')
+      try:
+          from Iptables import validar_ip, validar_puerto
+          print('✅ Importación exitosa')
+
+          # Test validación IP
+          assert validar_ip('192.168.1.1') == True
+          assert validar_ip('256.256.256.256') == False
+          print('✅ Validación IP funciona')
+
+          # Test validación puerto
+          assert validar_puerto('80') == True
+          assert validar_puerto('65536') == False
+          print('✅ Validación puerto funciona')
+
+          print('✅ Todas las pruebas de integración pasaron')
+      except Exception as e:
+          print(f'❌ Error: {e}')
+          sys.exit(1)
+      "
   tags:
     - docker
 
