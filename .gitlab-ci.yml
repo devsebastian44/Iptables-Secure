@@ -35,8 +35,6 @@ validate:python:
     - flake8 src/ --max-line-length=100 --ignore=E501,W503 || true
     - pylint src/ --disable=C0114,C0115,C0116 || true
   allow_failure: true
-  tags:
-    - docker
 
 validate:structure:
   stage: validate
@@ -48,8 +46,6 @@ validate:structure:
     - 'test -d docs/ || (echo "ERROR: No existe directorio docs/" && exit 1)'
     - 'test -d tests/ || (echo "ERROR: No existe directorio tests/" && exit 1)'
     - 'echo "✅ Estructura validada correctamente"'
-  tags:
-    - docker
 
 # =============================================================================
 # TESTING AUTOMATIZADO
@@ -77,8 +73,6 @@ test:unit:
     paths:
       - coverage.xml
     expire_in: 1 week
-  tags:
-    - docker
 
 test:integration:
   stage: test
@@ -111,8 +105,6 @@ test:integration:
           print(f'❌ Error: {e}')
           sys.exit(1)
       "
-  tags:
-    - docker
 
 # =============================================================================
 # ANÁLISIS DE SEGURIDAD
@@ -133,8 +125,6 @@ security:code:
       - bandit-report.json
     expire_in: 1 week
   allow_failure: true
-  tags:
-    - docker
 
 # =============================================================================
 # DESPLIEGUE Y DOCUMENTACIÓN
@@ -153,8 +143,6 @@ deploy:docs:
   only:
     - main
     - master
-  tags:
-    - docker
 
 # =============================================================================
 # LIMPIEZA
@@ -168,8 +156,6 @@ cleanup:
     - find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
     - echo "✅ Limpieza completada"
   when: always
-  tags:
-    - docker
 
 # =============================================================================
 # REGLAS DE EJECUCIÓN
