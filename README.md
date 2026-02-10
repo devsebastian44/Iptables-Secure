@@ -1,5 +1,10 @@
 # 🛡️ Iptables-Secure: Gestión Profesional de Cortafuegos
 
+![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
+![GitLab](https://img.shields.io/badge/GitLab-Repository-orange?logo=gitlab)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
+
 ## 📌 Descripción del Proyecto
 **Iptables-Secure** es una herramienta profesional de DevSecOps diseñada para automatizar la configuración de reglas de `iptables` en sistemas Linux. Se enfoca en el endurecimiento (hardening) de servidores contra ataques de red comunes como inundaciones SYN (SYN flooding), DoS y escaneos de puertos no autorizados.
 
@@ -63,8 +68,3 @@ En el laboratorio privado (GitLab), este proyecto utiliza un pipeline completo d
 - **Linting**: Cumplimiento de calidad de código mediante `flake8`.
 - **Pruebas Unitarias**: Validación de lógica usando `pytest`.
 - **Escaneo de Seguridad**: Análisis estático con `bandit`.
-
----
-
-## 📜 Licencia
-Distribuido bajo la licencia **GPL-3.0**. Consulta el archivo [LICENSE](./docs/LICENSE) para más detalles.
