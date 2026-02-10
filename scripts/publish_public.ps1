@@ -1,99 +1,53 @@
 # =============================================================================
-# Script para Publicación en GitHub (Portafolio Público)
-# Iptables Secure Manager - DevSecOps
+# scripts/publish_public.ps1 - VERSIÓN DEFINITIVA (SENIOR)
+# Sincronización Segura: GitLab (Completo) -> GitHub (Sanitizado)
 # =============================================================================
 
-param(
-    [Parameter(Mandatory=$false)]
-    [string]$Message = "🚀 Actualización de portafolio público"
-)
+Write-Host "[*] Iniciando sincronización profesional de Portafolio..." -ForegroundColor Cyan
 
-Write-Host "🔧 Preparando publicación para GitHub público..." -ForegroundColor Green
-
-# Verificar que estamos en la rama correcta
-$branch = git rev-parse --abbrev-ref HEAD
-if ($branch -ne "main") {
-    Write-Host "❌ Error: Debes estar en la rama 'main'" -ForegroundColor Red
-    exit 1
+# 1. Validaciones Iniciales (Pre-vuelo)
+$currentBranch = git rev-parse --abbrev-ref HEAD
+if ($currentBranch -ne "main") {
+    Write-Host "[!] Error: Debes estar en 'main' para publicar." -ForegroundColor Red
+    exit
 }
 
-# Limpiar archivos sensibles para GitHub público
-Write-Host "🧹 Limpiando archivos sensibles..." -ForegroundColor Yellow
-
-# Eliminar logs y backups
-Remove-Item -Path "*.log" -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "*.rules" -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "iptables_backup_*" -Force -ErrorAction SilentlyContinue
-
-# Limpiar cache de Python
-Remove-Item -Path "__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "*.pyc" -Force -ErrorAction SilentlyContinue
-
-# Limpiar archivos temporales
-Remove-Item -Path ".pytest_cache" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path ".coverage" -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "htmlcov" -Recurse -Force -ErrorAction SilentlyContinue
-
-# Verificar estructura mínima para GitHub
-$requiredFiles = @(
-    "README.md",
-    "src/Iptables.py",
-    "docs/LICENSE",
-    "docs/architecture.md",
-    "docs/security-guide.md",
-    "configs/setup.cfg"
-)
-
-Write-Host "📋 Verificando estructura mínima..." -ForegroundColor Yellow
-foreach ($file in $requiredFiles) {
-    if (Test-Path $file) {
-        Write-Host "✅ $file" -ForegroundColor Green
-    } else {
-        Write-Host "❌ $file - ARCHIVO FALTANTE" -ForegroundColor Red
-        exit 1
-    }
+if (git status --porcelain) {
+    Write-Host "[!] Tienes cambios sin guardar. Haz commit antes de publicar." -ForegroundColor Yellow
+    exit
 }
 
-# Agregar cambios al staging
-Write-Host "📦 Agregando archivos al staging..." -ForegroundColor Yellow
-git add README.md
-git add src/
-git add docs/
-git add configs/
-git add diagrams/
-git add .gitignore
-git add .gitlab-ci.yml
+# 2. Limpieza Local Previa (Evitar basura en el commit)
+Write-Host "[*] Limpiando archivos temporales y logs..." -ForegroundColor Yellow
+Remove-Item -Path "*.log", "*.rules", "iptables_backup_*" -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "__pycache__", ".pytest_cache" -Recurse -Force -ErrorAction SilentlyContinue
 
-# Excluir archivos sensibles del staging
-git reset HEAD *.log 2>$null
-git reset HEAD *.rules 2>$null
-git reset HEAD iptables_backup_* 2>$null
-git reset HEAD tests/ 2>$null
+# 3. Sincronización con Laboratorio Privado
+Write-Host "[*] Asegurando estado en GitLab..."
+git pull gitlab main --rebase
+git push gitlab main
 
-# Verificar qué se va a commitear
-Write-Host "🔍 Archivos que se van a commitear:" -ForegroundColor Cyan
-git status --porcelain
+# 4. Estrategia de Rama Pública (Aislamiento de Seguridad)
+Write-Host "[*] Creando release sanitizado en rama 'public'..."
+git checkout -B public main
 
-# Confirmar antes de commit
-$confirm = Read-Host "¿Confirmar commit para GitHub público? (S/N)"
-if ($confirm -notmatch "^[Ss]$") {
-    Write-Host "❌ Operación cancelada" -ForegroundColor Red
-    exit 0
-}
+# 5. Filtrado de Archivos (Lo que NO va a GitHub)
+Write-Host "[*] Aplicando filtros de seguridad DevSecOps..." -ForegroundColor Cyan
+# Eliminamos lo que es exclusivo del laboratorio privado
+git rm -r --cached tests/ -f 2>$null
+git rm -r --cached configs/ -f 2>$null
+git rm -r --cached scripts/ -f 2>$null
+git rm --cached .gitlab-ci.yml -f 2>$null
 
-# Hacer commit
-Write-Host "💾 Creando commit..." -ForegroundColor Yellow
-git commit -m $Message
+# 6. Commit de Lanzamiento y Push a GitHub
+# Nota: Mensaje sin iconos por solicitud de estilo profesional
+git commit -m "docs: release update to public portfolio (sanitized)" --allow-empty
+Write-Host "[*] Subiendo a GitHub (origin)..." -ForegroundColor Green
+git push origin public:main --force
 
-# Push a GitHub
-Write-Host "🚀 Subiendo a GitHub..." -ForegroundColor Yellow
-git push origin main
+# 7. Retorno Seguro al Entorno de Trabajo
+Write-Host "[*] Volviendo al Laboratorio (main)..."
+git checkout main -f
+git clean -fd 2>$null
 
-Write-Host "✅ Publicación completada exitosamente" -ForegroundColor Green
-Write-Host "🌐 Repositorio: https://github.com/devsebastian44/Iptables-Secure" -ForegroundColor Cyan
-
-# Mostrar estadísticas
-Write-Host "📊 Estadísticas del repositorio:" -ForegroundColor Yellow
-git log --oneline -5
-
-Write-Host "🎈 Portafolio público actualizado" -ForegroundColor Green
+Write-Host "[*] Portafolio en GitHub actualizado y Lab en GitLab protegido" -ForegroundColor Green
