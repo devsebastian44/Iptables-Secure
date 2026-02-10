@@ -55,11 +55,11 @@ except ValueError:
 
 #### Comandos Seguros
 ```python
-def ejecutar_comando(comando, mostrar_salida=True):
+def ejecutar_comando(comando_lista, mostrar_salida=True):
     try:
         resultado = subprocess.run(
-            comando,
-            shell=True,  # ⚠️ Validado y sanitizado
+            comando_lista,
+            shell=False,  # ✅ Ejecución sin shell (segura)
             check=True,
             capture_output=True,
             text=True
@@ -76,12 +76,13 @@ def ejecutar_comando(comando, mostrar_salida=True):
 #### Automático
 ```python
 def crear_backup():
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime('%Y%n%d_%H%M%S')
     backup_file = f"iptables_backup_{timestamp}.rules"
     
-    if ejecutar_comando(f"iptables-save > {backup_file}", mostrar_salida=False):
-        log(f"Backup creado: {backup_file}")
-        return backup_file
+    with open(backup_file, "w") as f:
+        subprocess.run(["iptables-save"], stdout=f, check=True)
+    log(f"Backup creado: {backup_file}")
+    return backup_file
 ```
 
 #### Restauración Segura

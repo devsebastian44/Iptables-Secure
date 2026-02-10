@@ -107,11 +107,15 @@ class TestFuncionesBasicas(unittest.TestCase):
             self.assertIn(test_message, content)
             self.assertIn('[', content)  # Timestamp format
     
+    @patch('builtins.print')
     @patch('os.system')
-    def test_limpiar_pantalla(self, mock_system):
-        """Test función limpiar pantalla"""
+    def test_limpiar_pantalla(self, mock_system, mock_print):
+        """Test función limpiar pantalla (multiplataforma)"""
         limpiar_pantalla()
-        mock_system.assert_called_once()
+        if os.name == 'nt':
+            mock_system.assert_called_once()
+        else:
+            mock_print.assert_called_once_with('\033[H\033[J', end='')
     
     @patch('builtins.print')
     def test_banner(self, mock_print):
@@ -136,9 +140,15 @@ class TestEjecucionComandos(unittest.TestCase):
         
         from Iptables import ejecutar_comando
         
-        resultado = ejecutar_comando("echo 'test'", mostrar_salida=False)
+        resultado = ejecutar_comando(["echo", "test"], mostrar_salida=False)
         self.assertTrue(resultado)
-        mock_run.assert_called_once()
+        mock_run.assert_called_once_with(
+            ["echo", "test"],
+            shell=False,
+            check=True,
+            capture_output=True,
+            text=True
+        )
     
     @patch('subprocess.run')
     def test_ejecutar_comando_fallido(self, mock_run):

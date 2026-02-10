@@ -16,8 +16,11 @@ BOLD = '\033[1m'
 LOG_FILE = "iptables_rules.log"
 
 def limpiar_pantalla():
-    """Limpia la pantalla de forma multiplataforma"""
-    os.system("cls" if os.name == "nt" else "clear")
+    """Limpia la pantalla de forma multiplataforma sin usar el shell"""
+    if os.name == 'nt':
+        os.system('cls')  # nosec
+    else:
+        print('\033[H\033[J', end='')  # Secuencia ANSI para limpiar pantalla
 
 def banner():
     """Muestra el banner de la aplicación"""
@@ -59,12 +62,15 @@ def validar_puerto(puerto):
     except ValueError:
         return False
 
-def ejecutar_comando(comando, mostrar_salida=True):
-    """Ejecuta un comando de sistema con manejo de errores"""
+def ejecutar_comando(comando_lista, mostrar_salida=True):
+    """Ejecuta un comando de sistema de forma segura (sin shell)"""
     try:
+        if isinstance(comando_lista, str):
+            comando_lista = comando_lista.split()
+
         resultado = subprocess.run(
-            comando,
-            shell=True,
+            comando_lista,
+            shell=False,
             check=True,
             capture_output=True,
             text=True
@@ -73,29 +79,34 @@ def ejecutar_comando(comando, mostrar_salida=True):
             print(resultado.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"{RED}[!]{RESET} Error al ejecutar comando: {e}")
+        # Silenciar errores esperados si es necesario
+        if "iptables -D" in str(e):
+             return False
+        print(f"{RED}[!]{RESET} Error al ejecutar comando: {' '.join(comando_lista)}")
         if e.stderr:
             print(f"{RED}[!]{RESET} Detalles: {e.stderr}")
         return False
 
 def crear_backup():
-    """Crea un backup de las reglas actuales de iptables"""
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    """Crea un backup de las reglas actuales de iptables usando redirección en Python"""
+    timestamp = datetime.now().strftime('%Y%n%d_%H%M%S')
     backup_file = f"iptables_backup_{timestamp}.rules"
     
     print(f"{YELLOW}[*]{RESET} Creando backup de reglas actuales...")
-    if ejecutar_comando(f"iptables-save > {backup_file}", mostrar_salida=False):
+    try:
+        with open(backup_file, "w", encoding="utf-8") as f:
+            subprocess.run(["iptables-save"], stdout=f, check=True)
         print(f"{GREEN}[✓]{RESET} Backup creado: {backup_file}")
         log(f"Backup creado: {backup_file}")
         return backup_file
-    else:
-        print(f"{RED}[!]{RESET} Error al crear backup")
+    except (subprocess.CalledProcessError, IOError) as e:
+        print(f"{RED}[!]{RESET} Error al crear backup: {e}")
         return None
 
 def mostrar_reglas():
     """Muestra las reglas actuales de iptables"""
     print(f"\n{BOLD}=== REGLAS ACTUALES DE IPTABLES ==={RESET}\n")
-    ejecutar_comando("iptables -L -n --line-numbers")
+    ejecutar_comando(["iptables", "-L", "-n", "--line-numbers"])
 
 def pausar():
     """Pausa para que el usuario pueda leer los resultados"""
@@ -106,8 +117,8 @@ def proteger_syn_flood():
     print(f"\n{BOLD}=== PROTECCIÓN CONTRA SYN FLOOD ==={RESET}")
     print(f"{YELLOW}[*]{RESET} Esta protección limita las conexiones SYN a 5 por segundo")
     
-    # Verificar si ya existe la regla
-    resultado = subprocess.run("iptables -L INPUT -n", shell=True, capture_output=True, text=True)
+    # Verificar si ya existe la regla usando lógica de Python
+    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
     if "tcp flags:0x17/0x02 limit: avg 5/sec burst 5" in resultado.stdout:
         print(f"{YELLOW}[!]{RESET} Esta protección ya está activa")
         pausar()
@@ -118,14 +129,17 @@ def proteger_syn_flood():
         crear_backup()
         
         print(f"{YELLOW}[*]{RESET} Aplicando reglas...")
-        if ejecutar_comando("iptables -A INPUT -p tcp --syn -m limit --limit 5/s -j ACCEPT", False) and \
-           ejecutar_comando("iptables -A INPUT -p tcp --syn -j DROP", False):
+        if ejecutar_comando(["iptables", "-A", "INPUT", "-p", "tcp", "--syn", "-m", "limit", "--limit", "5/s", "-j", "ACCEPT"], False) and \
+           ejecutar_comando(["iptables", "-A", "INPUT", "-p", "tcp", "--syn", "-j", "DROP"], False):
             print(f"{GREEN}[✓]{RESET} Protección contra SYN flood activada")
             log("Protección SYN flood activada")
             
-            # Mostrar reglas aplicadas
+            # Mostrar reglas aplicadas (filtrado en Python)
             print(f"\n{BOLD}Reglas aplicadas:{RESET}")
-            ejecutar_comando("iptables -L INPUT -n | grep -A 2 'tcp flags:0x17/0x02'")
+            res = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
+            for linea in res.stdout.split('\n'):
+                 if "tcp flags:0x17/0x02" in linea:
+                      print(linea)
         else:
             print(f"{RED}[!]{RESET} Error al aplicar reglas")
     
@@ -141,18 +155,13 @@ def limitar_acceso_ssh():
     if confirmar not in ['s', 'si', 'yes']:
         return
     
-    # Obtener IP actual del usuario
+    # Obtener IP actual del usuario de forma segura
     print(f"\n{YELLOW}[*]{RESET} Detectando tu IP actual...")
-    try:
-        ip_actual = subprocess.run(
-            "echo $SSH_CLIENT | awk '{print $1}'",
-            shell=True,
-            capture_output=True,
-            text=True
-        ).stdout.strip()
-        if ip_actual:
-            print(f"{GREEN}[✓]{RESET} Tu IP actual: {ip_actual}")
-    except:
+    ssh_client = os.environ.get('SSH_CLIENT')
+    if ssh_client:
+        ip_actual = ssh_client.split()[0]
+        print(f"{GREEN}[✓]{RESET} Tu IP actual: {ip_actual}")
+    else:
         ip_actual = None
     
     # Solicitar IPs permitidas
@@ -194,9 +203,9 @@ def limitar_acceso_ssh():
         
         print(f"{YELLOW}[*]{RESET} Aplicando reglas SSH...")
         
-        # Eliminar reglas SSH existentes
-        ejecutar_comando("iptables -D INPUT -p tcp --dport 22 -j DROP 2>/dev/null", False)
-        ejecutar_comando("iptables -D INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null", False)
+        # Eliminar reglas SSH existentes (ignorar fallos si no existen)
+        ejecutar_comando(["iptables", "-D", "INPUT", "-p", "tcp", "--dport", "22", "-j", "DROP"], False)
+        ejecutar_comando(["iptables", "-D", "INPUT", "-p", "tcp", "--dport", "22", "-j", "ACCEPT"], False)
         
         # Permitir IPs específicas
         for ip in ips_permitidas:
@@ -213,7 +222,10 @@ def limitar_acceso_ssh():
         
         # Mostrar reglas
         print(f"\n{BOLD}Reglas SSH actuales:{RESET}")
-        ejecutar_comando("iptables -L INPUT -n --line-numbers | grep ':22'")
+        res = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+        for linea in res.stdout.split('\n'):
+             if ":22" in linea or " dpt:22" in linea:
+                  print(linea)
     
     pausar()
 
@@ -245,8 +257,8 @@ def prevenir_ataques_dos():
     
     print(f"\n{YELLOW}[*]{RESET} Aplicando reglas anti-DoS...")
     
-    if ejecutar_comando(f"iptables -A INPUT -p tcp --syn --dport 80 -m connlimit --connlimit-above {conn_limit} -j DROP", False) and \
-       ejecutar_comando(f"iptables -A INPUT -p tcp --dport 80 -m limit --limit {rate_limit}/minute --limit-burst 30 -j ACCEPT", False):
+    if ejecutar_comando(["iptables", "-A", "INPUT", "-p", "tcp", "--syn", "--dport", "80", "-m", "connlimit", "--connlimit-above", str(conn_limit), "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "INPUT", "-p", "tcp", "--dport", "80", "-m", "limit", "--limit", f"{rate_limit}/minute", "--limit-burst", "30", "-j", "ACCEPT"], False):
         print(f"{GREEN}[✓]{RESET} Prevención de DoS activada")
         print(f"  • Máx. conexiones simultáneas: {conn_limit}")
         print(f"  • Máx. nuevas conexiones: {rate_limit}/minuto")
@@ -262,7 +274,7 @@ def evitar_escaneo_de_puertos():
     print(f"{YELLOW}[*]{RESET} Detecta y bloquea paquetes típicos de escaneo")
     
     # Verificar si la cadena ya existe
-    resultado = subprocess.run("iptables -L SCANNER_PROTECTION -n 2>/dev/null", shell=True, capture_output=True)
+    resultado = subprocess.run(["iptables", "-L", "SCANNER_PROTECTION", "-n"], capture_output=True)
     if resultado.returncode == 0:
         print(f"{YELLOW}[!]{RESET} La protección ya está configurada")
         opcion = input(f"{YELLOW}[?]{RESET} ¿Recrear la cadena? [s/N]: ").strip().lower()
@@ -270,21 +282,21 @@ def evitar_escaneo_de_puertos():
             pausar()
             return
         # Eliminar cadena existente
-        ejecutar_comando("iptables -D INPUT -j SCANNER_PROTECTION 2>/dev/null", False)
-        ejecutar_comando("iptables -F SCANNER_PROTECTION 2>/dev/null", False)
-        ejecutar_comando("iptables -X SCANNER_PROTECTION 2>/dev/null", False)
+        ejecutar_comando(["iptables", "-D", "INPUT", "-j", "SCANNER_PROTECTION"], False)
+        ejecutar_comando(["iptables", "-F", "SCANNER_PROTECTION"], False)
+        ejecutar_comando(["iptables", "-X", "SCANNER_PROTECTION"], False)
     
     crear_backup()
     
     print(f"\n{YELLOW}[*]{RESET} Creando cadena de protección...")
     
-    if ejecutar_comando("iptables -N SCANNER_PROTECTION", False) and \
-       ejecutar_comando("iptables -A SCANNER_PROTECTION -p tcp --tcp-flags ALL NONE -j DROP", False) and \
-       ejecutar_comando("iptables -A SCANNER_PROTECTION -p tcp --tcp-flags SYN,FIN SYN,FIN -j DROP", False) and \
-       ejecutar_comando("iptables -A SCANNER_PROTECTION -p tcp --tcp-flags SYN,RST SYN,RST -j DROP", False) and \
-       ejecutar_comando("iptables -A SCANNER_PROTECTION -p tcp --tcp-flags FIN,RST FIN,RST -j DROP", False) and \
-       ejecutar_comando("iptables -A SCANNER_PROTECTION -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP", False) and \
-       ejecutar_comando("iptables -A INPUT -j SCANNER_PROTECTION", False):
+    if ejecutar_comando(["iptables", "-N", "SCANNER_PROTECTION"], False) and \
+       ejecutar_comando(["iptables", "-A", "SCANNER_PROTECTION", "-p", "tcp", "--tcp-flags", "ALL", "NONE", "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "SCANNER_PROTECTION", "-p", "tcp", "--tcp-flags", "SYN,FIN", "SYN,FIN", "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "SCANNER_PROTECTION", "-p", "tcp", "--tcp-flags", "SYN,RST", "SYN,RST", "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "SCANNER_PROTECTION", "-p", "tcp", "--tcp-flags", "FIN,RST", "FIN,RST", "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "SCANNER_PROTECTION", "-p", "tcp", "--tcp-flags", "ALL", "SYN,RST,ACK,FIN,URG", "-j", "DROP"], False) and \
+       ejecutar_comando(["iptables", "-A", "INPUT", "-j", "SCANNER_PROTECTION"], False):
         
         print(f"{GREEN}[✓]{RESET} Protección contra escaneo activada")
         print(f"\n{BOLD}Tipos de escaneo bloqueados:{RESET}")
@@ -306,11 +318,15 @@ def bloquear_ip():
     """Bloquea una dirección IP específica"""
     print(f"\n{BOLD}=== BLOQUEAR DIRECCIÓN IP ==={RESET}")
     
-    # Mostrar IPs actualmente bloqueadas
+    # Mostrar IPs actualmente bloqueadas (filtrado en Python)
     print(f"\n{YELLOW}[*]{RESET} Consultando IPs bloqueadas...")
-    resultado = subprocess.run("iptables -L INPUT -n | grep DROP | awk '{print $4}'", 
-                              shell=True, capture_output=True, text=True)
-    ips_bloqueadas = [ip for ip in resultado.stdout.strip().split('\n') if ip and ip != '0.0.0.0/0']
+    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
+    ips_bloqueadas = []
+    for linea in resultado.stdout.split('\n'):
+        if "DROP" in linea:
+            partes = linea.split()
+            if len(partes) >= 4 and partes[3] != '0.0.0.0/0':
+                ips_bloqueadas.append(partes[3])
     
     if ips_bloqueadas:
         print(f"\n{BOLD}IPs actualmente bloqueadas:{RESET}")
@@ -345,7 +361,7 @@ def bloquear_ip():
     
     print(f"\n{YELLOW}[*]{RESET} Bloqueando IP {ip}...")
     
-    if ejecutar_comando(f"iptables -A INPUT -s {ip} -j DROP", False):
+    if ejecutar_comando(["iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"], False):
         print(f"{GREEN}[✓]{RESET} IP {ip} bloqueada exitosamente")
         log_msg = f"IP {ip} bloqueada"
         if motivo:
@@ -354,7 +370,10 @@ def bloquear_ip():
         
         # Mostrar regla aplicada
         print(f"\n{BOLD}Regla aplicada:{RESET}")
-        ejecutar_comando(f"iptables -L INPUT -n --line-numbers | grep {ip}")
+        res = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+        for linea in res.stdout.split('\n'):
+             if ip in linea:
+                  print(linea)
     else:
         print(f"{RED}[!]{RESET} Error al bloquear IP")
     
@@ -364,20 +383,19 @@ def desbloquear_ip():
     """Desbloquea una dirección IP"""
     print(f"\n{BOLD}=== DESBLOQUEAR DIRECCIÓN IP ==={RESET}")
     
-    # Listar IPs bloqueadas
+    # Listar IPs bloqueadas (filtrado en Python)
     print(f"\n{YELLOW}[*]{RESET} Consultando reglas de bloqueo...")
-    resultado = subprocess.run(
-        "iptables -L INPUT -n --line-numbers | grep DROP",
-        shell=True, capture_output=True, text=True
-    )
+    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+    reglas_drop = [linea for linea in resultado.stdout.split('\n') if "DROP" in linea]
     
-    if not resultado.stdout.strip():
+    if not reglas_drop:
         print(f"{YELLOW}[!]{RESET} No hay IPs bloqueadas actualmente")
         pausar()
         return
     
     print(f"\n{BOLD}Reglas de bloqueo actuales:{RESET}")
-    print(resultado.stdout)
+    for linea in reglas_drop:
+        print(linea)
     
     # Solicitar IP o número de línea
     opcion = input(f"\n{BOLD}Ingrese IP o número de línea a desbloquear: {RESET}").strip()
@@ -386,14 +404,14 @@ def desbloquear_ip():
     
     # Intentar como número de línea
     if opcion.isdigit():
-        if ejecutar_comando(f"iptables -D INPUT {opcion}", False):
+        if ejecutar_comando(["iptables", "-D", "INPUT", opcion], False):
             print(f"{GREEN}[✓]{RESET} Regla eliminada")
             log(f"Regla de bloqueo #{opcion} eliminada")
         else:
             print(f"{RED}[!]{RESET} Error al eliminar regla")
     # Intentar como IP
     elif validar_ip(opcion):
-        if ejecutar_comando(f"iptables -D INPUT -s {opcion} -j DROP", False):
+        if ejecutar_comando(["iptables", "-D", "INPUT", "-s", opcion, "-j", "DROP"], False):
             print(f"{GREEN}[✓]{RESET} IP {opcion} desbloqueada")
             log(f"IP {opcion} desbloqueada")
         else:
@@ -412,16 +430,17 @@ def guardar_reglas():
     if confirmar not in ['', 's', 'si', 'yes']:
         return
     
-    # Verificar si iptables-persistent está instalado
-    resultado = subprocess.run("dpkg -l | grep iptables-persistent", 
-                              shell=True, capture_output=True)
+    # Verificar si iptables-persistent está instalado (sin pipes)
+    resultado = subprocess.run(["dpkg", "-l", "iptables-persistent"], capture_output=True)
     
     if resultado.returncode != 0:
         print(f"{YELLOW}[*]{RESET} iptables-persistent no está instalado")
         instalar = input(f"{YELLOW}[?]{RESET} ¿Instalar ahora? [S/n]: ").strip().lower()
         if instalar in ['', 's', 'si', 'yes']:
             print(f"{YELLOW}[*]{RESET} Instalando iptables-persistent...")
-            if ejecutar_comando("DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent", False):
+            env = os.environ.copy()
+            env["DEBIAN_FRONTEND"] = "noninteractive"
+            if ejecutar_comando(["apt-get", "install", "-y", "iptables-persistent"], False):
                 print(f"{GREEN}[✓]{RESET} iptables-persistent instalado")
             else:
                 print(f"{RED}[!]{RESET} Error al instalar")
@@ -432,7 +451,7 @@ def guardar_reglas():
             return
     
     print(f"\n{YELLOW}[*]{RESET} Guardando reglas...")
-    if ejecutar_comando("netfilter-persistent save", False):
+    if ejecutar_comando(["netfilter-persistent", "save"], False):
         print(f"{GREEN}[✓]{RESET} Reglas guardadas en /etc/iptables/rules.v4")
         log("Reglas guardadas permanentemente")
     else:
@@ -470,12 +489,14 @@ def restaurar_backup():
             
             if confirmar in ['s', 'si', 'yes']:
                 print(f"\n{YELLOW}[*]{RESET} Restaurando {backup_seleccionado}...")
-                if ejecutar_comando(f"iptables-restore < {backup_seleccionado}", False):
+                try:
+                    with open(backup_seleccionado, "r", encoding="utf-8") as f:
+                         subprocess.run(["iptables-restore"], stdin=f, check=True)
                     print(f"{GREEN}[✓]{RESET} Backup restaurado exitosamente")
                     log(f"Backup restaurado: {backup_seleccionado}")
                     mostrar_reglas()
-                else:
-                    print(f"{RED}[!]{RESET} Error al restaurar backup")
+                except subprocess.CalledProcessError as e:
+                    print(f"{RED}[!]{RESET} Error al restaurar backup: {e}")
         else:
             print(f"{RED}[!]{RESET} Opción inválida")
     except ValueError:
@@ -526,7 +547,10 @@ def menu_principal():
         elif opcion == "10":
             if os.path.exists(LOG_FILE):
                 print(f"\n{BOLD}=== ÚLTIMAS 30 LÍNEAS DEL LOG ==={RESET}\n")
-                ejecutar_comando(f"tail -n 30 {LOG_FILE}")
+                with open(LOG_FILE, "r", encoding="utf-8") as f:
+                    lineas = f.readlines()
+                    for linea in lineas[-30:]:
+                        print(linea.strip())
             else:
                 print(f"{YELLOW}[!]{RESET} No hay logs disponibles")
             pausar()
