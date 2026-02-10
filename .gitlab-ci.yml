@@ -42,12 +42,12 @@ validate:structure:
   stage: validate
   image: alpine:latest
   script:
-    - echo "Validando estructura del proyecto..."
-    - test -f src/Iptables.py || (echo "ERROR: No existe src/Iptables.py" && exit 1)
-    - test -f README.md || (echo "ERROR: No existe README.md" && exit 1)
-    - test -d docs/ || (echo "ERROR: No existe directorio docs/" && exit 1)
-    - test -d tests/ || (echo "ERROR: No existe directorio tests/" && exit 1)
-    - echo "✅ Estructura validada correctamente"
+    - 'echo "Validando estructura del proyecto..."'
+    - 'test -f src/Iptables.py || (echo "ERROR: No existe src/Iptables.py" && exit 1)'
+    - 'test -f README.md || (echo "ERROR: No existe README.md" && exit 1)'
+    - 'test -d docs/ || (echo "ERROR: No existe directorio docs/" && exit 1)'
+    - 'test -d tests/ || (echo "ERROR: No existe directorio tests/" && exit 1)'
+    - 'echo "✅ Estructura validada correctamente"'
   tags:
     - docker
 
