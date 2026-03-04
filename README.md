@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
 ![GitLab](https://img.shields.io/badge/GitLab-Repository-orange?logo=gitlab)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![License](https://img.shields.io/badge/License-GPL--3.0-red)
 ![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
 
 ## 📌 Descripción del Proyecto
