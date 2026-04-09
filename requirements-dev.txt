@@ -1,0 +1,11 @@
+# Dependencias de desarrollo y testeo
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Dependencias de linting y formateo
+flake8>=6.0.0
+pylint>=2.15.0
+
+# Dependencias de seguridad
+bandit>=1.7.0
+safety>=2.0.0
