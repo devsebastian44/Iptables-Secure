@@ -110,8 +110,11 @@ nano .env.local   # Definir IPs permitidas para SSH, puertos, límites de conexi
 ### Instalar herramientas de análisis y testing (CI local)
 
 ```bash
-pip install flake8 bandit pytest coverage tox
-apt install shellcheck
+# Instalar dependencias centralizadas de desarrollo, linting y seguridad
+pip install -r requirements-dev.txt
+
+# Linting para scripts Bash (Opcional)
+sudo apt install shellcheck
 ```
 
 ---
