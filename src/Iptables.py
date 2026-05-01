@@ -40,11 +40,17 @@ def log(mensaje):
         f.write(f"[{timestamp}] {mensaje}\n")
 
 def verificar_root():
-    """Verifica si el script se ejecuta como root"""
-    if os.geteuid() != 0:
-        print(f"{RED}[!]{RESET} Este script debe ejecutarse como root (usando sudo)")
-        print(f"{YELLOW}[!]{RESET} Ejemplo: sudo python3 {sys.argv[0]}")
-        sys.exit(1)
+    """Verifica si el script se ejecuta como root (solo en sistemas Unix)"""
+    if hasattr(os, 'geteuid'):
+        if os.geteuid() != 0:
+            print(f"{RED}[!]{RESET} Este script debe ejecutarse como root (usando sudo)")
+            print(f"{YELLOW}[!]{RESET} Ejemplo: sudo python3 {sys.argv[0]}")
+            sys.exit(1)
+    elif os.name == 'nt':
+        # En Windows, no podemos verificar geteuid, pero iptables no es nativo.
+        # Podríamos verificar privilegios de Admin, pero para este portafolio 
+        # permitimos continuar para demostración.
+        pass
 
 def validar_ip(ip):
     """Valida formato de dirección IP"""
@@ -89,7 +95,7 @@ def ejecutar_comando(comando_lista, mostrar_salida=True):
 
 def crear_backup():
     """Crea un backup de las reglas actuales de iptables usando redirección en Python"""
-    timestamp = datetime.now().strftime('%Y%n%d_%H%M%S')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_file = f"iptables_backup_{timestamp}.rules"
     
     print(f"{YELLOW}[*]{RESET} Creando backup de reglas actuales...")

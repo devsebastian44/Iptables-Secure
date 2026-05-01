@@ -193,8 +193,8 @@ class TestBackup(unittest.TestCase):
     @patch('subprocess.run')
     def test_crear_backup_fallido(self, mock_run):
         """Test creación de backup fallido"""
-        # Configurar mock para simular comando fallido
-        mock_run.return_value = MagicMock(returncode=1)
+        # Configurar mock para simular comando fallido (lanza excepción con check=True)
+        mock_run.side_effect = subprocess.CalledProcessError(1, ["iptables-save"])
         
         backup_file = crear_backup()
         
@@ -216,14 +216,13 @@ class TestIntegracion(unittest.TestCase):
             'menu_principal', 'main'
         ]
         
-        from Iptables import *
+        import Iptables
         
         for funcion in funciones_esperadas:
             with self.subTest(funcion=funcion):
                 self.assertTrue(
-                    callable(globals().get(funcion)) or 
-                    callable(locals().get(funcion)),
-                    f"Función {funcion} debería ser callable"
+                    callable(getattr(Iptables, funcion, None)),
+                    f"Función {funcion} debería ser callable en el módulo Iptables"
                 )
     
     def test_flujo_validacion_tipico(self):
@@ -239,7 +238,7 @@ class TestIntegracion(unittest.TestCase):
         # Combinación de validaciones
         self.assertTrue(validar_ip(ip_valida) and validar_puerto(puerto_valido))
     
-    @patch('os.geteuid')
+    @patch('os.geteuid', create=True)
     def test_verificacion_root(self, mock_geteuid):
         """Test verificación de privilegios de root"""
         from Iptables import verificar_root
