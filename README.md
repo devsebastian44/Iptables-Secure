@@ -2,7 +2,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat&logo=python&logoColor=white)
 ![iptables](https://img.shields.io/badge/iptables-Firewall%20Manager-E95420?style=flat&logo=linux&logoColor=white)
-![GitLab CI](https://img.shields.io/badge/GitLab_CI-DevSecOps-FC6D26?style=flat&logo=gitlab&logoColor=white)
 ![Bandit](https://img.shields.io/badge/SAST-Bandit-critical?style=flat&logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--3.0-red?style=flat&logo=gnu&logoColor=white)
 ![Language](https://img.shields.io/badge/Language-100%25%20Python-3776AB?style=flat&logo=python&logoColor=white)
@@ -15,7 +14,7 @@
 
 La herramienta genera automáticamente respaldos de las reglas activas (`iptables_backup_*.rules`) antes de aplicar cualquier cambio, manteniendo una bitácora de auditoría en archivos de log — ambos excluidos de Git para proteger la configuración sensible del servidor. Las reglas aplicadas incluyen mitigación de SYN flooding, bloqueo de escaneos sigilosos, restricción de acceso SSH y persistencia de reglas mediante `iptables-persistent`.
 
-El proyecto forma parte de un laboratorio DevSecOps de doble repositorio: el código fuente operativo completo y los pipelines CI/CD residen en GitLab, mientras que GitHub expone la arquitectura documentada como portafolio profesional.
+El proyecto está diseñado como una solución profesional de seguridad de red, integrando mejores prácticas de DevSecOps como análisis estático de seguridad (SAST), linting y pruebas automatizadas para garantizar un despliegue robusto.
 
 > ⚠️ **Uso Responsable:** Esta herramienta modifica reglas de firewall activas en el sistema. Su uso incorrecto puede bloquear acceso legítimo al servidor. Probar siempre en entornos controlados antes de desplegar en producción.
 
@@ -32,7 +31,7 @@ El proyecto forma parte de un laboratorio DevSecOps de doble repositorio: el có
 - **Registro de auditoría** — bitácora detallada en `iptables_rules.log` con cada cambio de regla aplicado
 - **Persistencia de reglas** — integración con `iptables-persistent` para que las reglas sobrevivan reinicios del sistema
 - **Configuración multi-entorno** — soporte para perfiles `.env.local`, `.env.development`, `.env.test`, `.env.production` con parámetros por contexto de despliegue
-- **Pipeline CI/CD GitLab** con linting (`flake8`), análisis SAST (`bandit`), linting de scripts (`shellcheck`) y suite de pruebas (`pytest`) con cobertura
+- **Pipeline CI/CD profesional** con linting (`flake8`), análisis SAST (`bandit`), linting de scripts (`shellcheck`) y suite de pruebas (`pytest`) con cobertura
 
 ---
 
@@ -80,10 +79,10 @@ El proyecto forma parte de un laboratorio DevSecOps de doble repositorio: el có
 - **Privilegios:** `root` o `sudo` — requeridos para manipular `iptables`
 - **Dependencia del sistema:** `iptables` y `iptables-persistent`
 
-### Clonar el repositorio completo (desde GitLab)
+### Clonar el repositorio
 
 ```bash
-git clone https://gitlab.com/group-cybersecurity-lab/Iptables-Secure.git
+git clone https://github.com/devsebastian44/Iptables-Secure.git
 cd Iptables-Secure
 ```
 
@@ -205,17 +204,17 @@ Iptables-Secure/
 ├── src/                               # Código fuente principal
 │   └── Iptables.py                    # Script central — gestor de reglas iptables
 │
-├── scripts/                           # Automatización DevSecOps [solo GitLab]
+├── scripts/                           # Automatización DevSecOps
 │   └── *.sh                           # Scripts auxiliares de configuración y CI
 │
-├── configs/                           # Perfiles de configuración por entorno [solo GitLab]
+├── configs/                           # Perfiles de configuración por entorno
 │   ├── .env.example                   # Plantilla pública de variables de entorno
 │   ├── .env.local                     # Config local [gitignoreado]
 │   ├── .env.development               # Config desarrollo [gitignoreado]
 │   ├── .env.test                      # Config testing [gitignoreado]
 │   └── .env.production                # Config producción [gitignoreado]
 │
-├── tests/                             # Suite de pruebas pytest [solo GitLab]
+├── tests/                             # Suite de pruebas pytest
 │   └── test_*.py                      # Tests unitarios, funcionales y de integración
 │
 ├── docs/                              # Documentación técnica
@@ -234,7 +233,6 @@ Iptables-Secure/
 │   ├── raw/                           # Datos crudos de red [gitignoreado]
 │   └── processed/                     # Datos procesados para análisis [gitignoreado]
 │
-├── .gitlab-ci.yml                     # Pipeline CI/CD completo [solo GitLab]
 ├── .gitignore                         # 156 líneas — 9 secciones de exclusión categorizadas
 ├── LICENSE                            # GNU General Public License v3.0
 └── README.md
@@ -262,8 +260,8 @@ Iptables-Secure/
 - **Backup antes de cada cambio:** El script genera `iptables_backup_<timestamp>.rules` automáticamente antes de modificar cualquier regla — esto garantiza un punto de restauración ante configuraciones incorrectas
 - **Política DROP por defecto:** La cadena INPUT se configura con `POLICY DROP`, lo que significa que solo el tráfico explícitamente permitido puede ingresar al servidor
 - **Secretos protegidos por `.gitignore`:** Certificados (`*.pem`, `*.key`, `*.crt`, `*.p12`), credenciales (`secrets.yaml`, `secrets.json`) y configuraciones de entorno nunca se sincronizan al repositorio
-- **SAST en pipeline:** `bandit` analiza el código Python antes de cada merge, detectando uso peligroso de `subprocess`, `eval` o llamadas shell inseguras
-- **Logs de auditoría gitignoreados:** Los archivos `iptables_rules.log` y `logs/` registran cambios de firewall pero nunca exponen la topología del servidor al repositorio público
+- **SAST en pipeline:** `bandit` analiza el código Python detectando uso peligroso de `subprocess`, `eval` o llamadas shell inseguras
+- **Logs de auditoría gitignoreados:** Los archivos `iptables_rules.log` y `logs/` registran cambios de firewall pero nunca exponen la topología del servidor
 
 ### Buenas prácticas antes de desplegar
 
@@ -276,45 +274,30 @@ Iptables-Secure/
 
 ## 🌐 Repository Architecture
 
-Este proyecto sigue una arquitectura distribuida de doble repositorio orientada a DevSecOps:
-
-- **GitHub** → Portafolio público: código fuente en `src/`, documentación en `docs/`, diagramas en `diagrams/` y arquitectura como presentación profesional
-- **GitLab** → Laboratorio educativo completo: scripts de automatización, suite de pruebas, pipeline CI/CD, configuraciones multi-entorno y herramientas de despliegue
+Este proyecto sigue una arquitectura centralizada orientada a la seguridad y transparencia del código fuente en GitHub.
 
 ```
-GitLab (Laboratorio Completo)                GitHub (Portafolio Público)
-┌───────────────────────────────┐            ┌──────────────────────────────┐
-│ src/Iptables.py  → Script     │            │ src/Iptables.py  → Visible   │
-│ scripts/        → Automatiz.  │──push──►   │ docs/            → Manuales  │
-│ configs/        → Multi-env   │  sanitiz.  │ diagrams/        → Flujos    │
-│ tests/          → pytest+tox  │            │ LICENSE / README.md          │
-│ .gitlab-ci.yml  → CI/CD       │            └──────────────────────────────┘
-│ logs/ backups/  → Auditoría   │
-└───────────────────────────────┘
-            ▲
-   Scripts de sincronización
-   (sanitización + push controlado)
+GitHub (Repositorio Central)
+┌──────────────────────────────┐
+│ src/Iptables.py  → Lógica    │
+│ configs/         → Plantillas│
+│ tests/           → Tests     │
+│ docs/            → Documentos│
+│ logs/ backups/   → Locales   │
+│ LICENSE / README.md          │
+└──────────────────────────────┘
 ```
-
-> **Diferencia clave respecto a otros proyectos del laboratorio:** En este repositorio, `src/Iptables.py` es **visible en GitHub** — el código fuente principal está publicado como portafolio. Lo que permanece exclusivo en GitLab son los `scripts/` de automatización, `tests/`, `configs/` con valores reales y el `.gitlab-ci.yml`.
-
-### 🔗 Full Source Code
-
-👉 Código operativo completo disponible en GitLab: [https://gitlab.com/group-cybersecurity-lab/Iptables-Secure](https://gitlab.com/group-cybersecurity-lab/Iptables-Secure)
 
 ---
 
 ## 🚀 Roadmap
 
-- [ ] **Interfaz CLI interactiva** — Menú de selección de módulos de protección con confirmación previa a la aplicación de reglas
-- [ ] **Soporte para IPv6** — Extensión de todas las reglas a `ip6tables` para cubrir el stack de red dual (IPv4/IPv6)
-- [ ] **Módulo de detección de anomalías** — Análisis de los logs de `iptables` para identificar patrones de ataque en tiempo real
-- [ ] **Perfiles de hardening predefinidos** — Conjuntos de reglas por tipo de servidor: web, base de datos, VPN, DNS
-- [ ] **Integración con `fail2ban`** — Baneos dinámicos de IPs basados en patrones de intentos fallidos detectados en logs
-- [ ] **Generación de reportes HTML** — Resumen visual del estado del firewall, reglas activas y eventos bloqueados a partir de los logs de auditoría
-- [ ] **Soporte para `nftables`** — Migración opcional del backend de filtrado a `nftables` (reemplazo moderno de `iptables` en kernels recientes)
-- [ ] **Cobertura pytest ≥ 90%** con mocks de llamadas al sistema y pruebas de integración de reglas en entorno aislado
-- [ ] **Modo dry-run** — Ejecución simulada que muestra las reglas que se aplicarían sin modificar el firewall activo
+- [ ] **Interfaz CLI interactiva** — Menú de selección de módulos de protección
+- [ ] **Soporte para IPv6** — Extensión de todas las reglas a `ip6tables`
+- [ ] **Módulo de detección de anomalías** — Análisis de los logs para identificar patrones de ataque
+- [ ] **Perfiles de hardening predefinidos** — Conjuntos de reglas por tipo de servidor
+- [ ] **Integración con `fail2ban`** — Baneos dinámicos de IPs
+- [ ] **Soporte para `nftables`** — Migración opcional del backend de filtrado
 
 ---
 
@@ -322,7 +305,7 @@ GitLab (Laboratorio Completo)                GitHub (Portafolio Público)
 
 **GNU General Public License v3.0** — Ver [`LICENSE`](./LICENSE)
 
-El código puede ser usado, modificado y distribuido bajo los términos de la GPL-3.0, con la obligación de mantener el código fuente disponible en distribuciones derivadas. El uso de esta herramienta en sistemas sin autorización del propietario queda estrictamente prohibido.
+El código puede ser usado, modificado y distribuido bajo los términos de la GPL-3.0, con la obligación de mantener el código fuente disponible en distribuciones derivadas.
 
 ---
 
@@ -330,12 +313,11 @@ El código puede ser usado, modificado y distribuido bajo los términos de la GP
 
 **Sebastian** — [`@devsebastian44`](https://github.com/devsebastian44)
 
-Desarrollador e investigador en ciberseguridad con especialización en hardening de infraestructura, automatización de políticas de red y pipelines DevSecOps. Este proyecto forma parte de un laboratorio educativo orientado a la seguridad defensiva de servidores Linux.
+Desarrollador e investigador en ciberseguridad con especialización en hardening de infraestructura, automatización de políticas de red y pipelines DevSecOps.
 
 | Plataforma | Enlace |
 |---|---|
 | GitHub | [github.com/devsebastian44](https://github.com/devsebastian44) |
-| GitLab | [gitlab.com/group-cybersecurity-lab](https://gitlab.com/group-cybersecurity-lab) |
 
 ---
 

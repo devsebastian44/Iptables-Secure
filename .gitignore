@@ -5,14 +5,14 @@
 # =============================================================================
 # ARCHIVOS SENSIBLES DE CIBERSEGURIDAD (GitHub Público)
 # =============================================================================
-# Note: tests/ directory is included for GitLab CI/CD
+# Note: tests/ directory is included for CI/CD
 # Logs and backups are excluded
 *.log
 iptables_backup_*.rules
 iptables_rules.log
 
 # =============================================================================
-# LOGS Y BACKUPS (Privados para GitLab)
+# LOGS Y BACKUPS
 # =============================================================================
 *.log
 *.logs
@@ -106,7 +106,7 @@ docs/build/
 # =============================================================================
 # ARTIFACTOS DE CI/CD
 # =============================================================================
-# Note: .gitlab-ci.yml is included for GitLab CI/CD
+# Note: CI/CD configuration files are included
 .github/
 ci/
 artifacts/
