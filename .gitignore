@@ -107,7 +107,6 @@ docs/build/
 # ARTIFACTOS DE CI/CD
 # =============================================================================
 # Note: CI/CD configuration files are included
-.github/
 ci/
 artifacts/
 reports/
