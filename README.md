@@ -315,7 +315,7 @@ El código puede ser usado, modificado y distribuido bajo los términos de la GP
 
 ## 🤝 Contributing
 
-¡Las contribuciones son bienvenidas! Si tienes ideas para nuevas reglas de hardening o mejoras en el motor de Python, por favor lee nuestra [Guía de Contribución](./CONTRIBUTING.md) antes de enviar un Pull Request.
+¡Las contribuciones son bienvenidas! Si tienes ideas para nuevas reglas de hardening o mejoras en el motor de Python, por favor lee nuestra [Guía de Contribución](./docs/CONTRIBUTING.md) antes de enviar un Pull Request.
 
 1. Fork del proyecto
 2. Crear una rama (`feature/increible-mejora`)
