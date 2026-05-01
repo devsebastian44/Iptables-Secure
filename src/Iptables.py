@@ -1,8 +1,14 @@
 import sys
 import os
-import subprocess
+import subprocess  # nosec B404
 import re
 from datetime import datetime
+
+# Rutas absolutas de binarios para seguridad (B607 fix)
+IPTABLES = "/usr/sbin/iptables"
+IPTABLES_SAVE = "/usr/sbin/iptables-save"
+IPTABLES_RESTORE = "/usr/sbin/iptables-restore"
+DPKG = "/usr/bin/dpkg"
 
 # Colores
 BLUE = '\033[34m'
@@ -80,7 +86,7 @@ def ejecutar_comando(comando_lista, mostrar_salida=True):
             check=True,
             capture_output=True,
             text=True
-        )
+        )  # nosec B603
         if mostrar_salida and resultado.stdout:
             print(resultado.stdout)
         return True
@@ -101,7 +107,7 @@ def crear_backup():
     print(f"{YELLOW}[*]{RESET} Creando backup de reglas actuales...")
     try:
         with open(backup_file, "w", encoding="utf-8") as f:
-            subprocess.run(["iptables-save"], stdout=f, check=True)
+            subprocess.run([IPTABLES_SAVE], stdout=f, check=True)  # nosec B603
         print(f"{GREEN}[✓]{RESET} Backup creado: {backup_file}")
         log(f"Backup creado: {backup_file}")
         return backup_file
@@ -124,7 +130,7 @@ def proteger_syn_flood():
     print(f"{YELLOW}[*]{RESET} Esta protección limita las conexiones SYN a 5 por segundo")
     
     # Verificar si ya existe la regla usando lógica de Python
-    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
+    resultado = subprocess.run([IPTABLES, "-L", "INPUT", "-n"], capture_output=True, text=True)  # nosec B603
     if "tcp flags:0x17/0x02 limit: avg 5/sec burst 5" in resultado.stdout:
         print(f"{YELLOW}[!]{RESET} Esta protección ya está activa")
         pausar()
@@ -142,7 +148,7 @@ def proteger_syn_flood():
             
             # Mostrar reglas aplicadas (filtrado en Python)
             print(f"\n{BOLD}Reglas aplicadas:{RESET}")
-            res = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
+            res = subprocess.run([IPTABLES, "-L", "INPUT", "-n"], capture_output=True, text=True)  # nosec B603
             for linea in res.stdout.split('\n'):
                  if "tcp flags:0x17/0x02" in linea:
                       print(linea)
@@ -228,7 +234,7 @@ def limitar_acceso_ssh():
         
         # Mostrar reglas
         print(f"\n{BOLD}Reglas SSH actuales:{RESET}")
-        res = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+        res = subprocess.run([IPTABLES, "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)  # nosec B603
         for linea in res.stdout.split('\n'):
              if ":22" in linea or " dpt:22" in linea:
                   print(linea)
@@ -280,7 +286,7 @@ def evitar_escaneo_de_puertos():
     print(f"{YELLOW}[*]{RESET} Detecta y bloquea paquetes típicos de escaneo")
     
     # Verificar si la cadena ya existe
-    resultado = subprocess.run(["iptables", "-L", "SCANNER_PROTECTION", "-n"], capture_output=True)
+    resultado = subprocess.run([IPTABLES, "-L", "SCANNER_PROTECTION", "-n"], capture_output=True)  # nosec B603
     if resultado.returncode == 0:
         print(f"{YELLOW}[!]{RESET} La protección ya está configurada")
         opcion = input(f"{YELLOW}[?]{RESET} ¿Recrear la cadena? [s/N]: ").strip().lower()
@@ -326,7 +332,7 @@ def bloquear_ip():
     
     # Mostrar IPs actualmente bloqueadas (filtrado en Python)
     print(f"\n{YELLOW}[*]{RESET} Consultando IPs bloqueadas...")
-    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n"], capture_output=True, text=True)
+    resultado = subprocess.run([IPTABLES, "-L", "INPUT", "-n"], capture_output=True, text=True)  # nosec B603
     ips_bloqueadas = []
     for linea in resultado.stdout.split('\n'):
         if "DROP" in linea:
@@ -376,7 +382,7 @@ def bloquear_ip():
         
         # Mostrar regla aplicada
         print(f"\n{BOLD}Regla aplicada:{RESET}")
-        res = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+        res = subprocess.run([IPTABLES, "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)  # nosec B603
         for linea in res.stdout.split('\n'):
              if ip in linea:
                   print(linea)
@@ -391,7 +397,7 @@ def desbloquear_ip():
     
     # Listar IPs bloqueadas (filtrado en Python)
     print(f"\n{YELLOW}[*]{RESET} Consultando reglas de bloqueo...")
-    resultado = subprocess.run(["iptables", "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)
+    resultado = subprocess.run([IPTABLES, "-L", "INPUT", "-n", "--line-numbers"], capture_output=True, text=True)  # nosec B603
     reglas_drop = [linea for linea in resultado.stdout.split('\n') if "DROP" in linea]
     
     if not reglas_drop:
@@ -437,7 +443,7 @@ def guardar_reglas():
         return
     
     # Verificar si iptables-persistent está instalado (sin pipes)
-    resultado = subprocess.run(["dpkg", "-l", "iptables-persistent"], capture_output=True)
+    resultado = subprocess.run([DPKG, "-l", "iptables-persistent"], capture_output=True)  # nosec B603
     
     if resultado.returncode != 0:
         print(f"{YELLOW}[*]{RESET} iptables-persistent no está instalado")
@@ -497,7 +503,7 @@ def restaurar_backup():
                 print(f"\n{YELLOW}[*]{RESET} Restaurando {backup_seleccionado}...")
                 try:
                     with open(backup_seleccionado, "r", encoding="utf-8") as f:
-                         subprocess.run(["iptables-restore"], stdin=f, check=True)
+                         subprocess.run([IPTABLES_RESTORE], stdin=f, check=True)  # nosec B603
                     print(f"{GREEN}[✓]{RESET} Backup restaurado exitosamente")
                     log(f"Backup restaurado: {backup_seleccionado}")
                     mostrar_reglas()
