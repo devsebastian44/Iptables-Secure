@@ -4,7 +4,7 @@
 ![iptables](https://img.shields.io/badge/iptables-Firewall%20Manager-E95420?style=flat&logo=linux&logoColor=white)
 ![Bandit](https://img.shields.io/badge/SAST-Bandit-critical?style=flat&logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL--3.0-red?style=flat&logo=gnu&logoColor=white)
-![Language](https://img.shields.io/badge/Language-100%25%20Python-3776AB?style=flat&logo=python&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=flat&logo=github-actions&logoColor=white)
 
 ---
 
@@ -17,6 +17,10 @@ La herramienta genera automáticamente respaldos de las reglas activas (`iptable
 El proyecto está diseñado como una solución profesional de seguridad de red, integrando mejores prácticas de DevSecOps como análisis estático de seguridad (SAST), linting y pruebas automatizadas para garantizar un despliegue robusto.
 
 > ⚠️ **Uso Responsable:** Esta herramienta modifica reglas de firewall activas en el sistema. Su uso incorrecto puede bloquear acceso legítimo al servidor. Probar siempre en entornos controlados antes de desplegar en producción.
+>
+> ---
+>
+> 🛡️ **Security Disclaimer:** This project is for educational and ethical cybersecurity purposes only. The author is not responsible for any damage caused by misuse of this tool.
 
 ---
 
@@ -306,6 +310,18 @@ GitHub (Repositorio Central)
 **GNU General Public License v3.0** — Ver [`LICENSE`](./LICENSE)
 
 El código puede ser usado, modificado y distribuido bajo los términos de la GPL-3.0, con la obligación de mantener el código fuente disponible en distribuciones derivadas.
+
+---
+
+## 🤝 Contributing
+
+¡Las contribuciones son bienvenidas! Si tienes ideas para nuevas reglas de hardening o mejoras en el motor de Python, por favor lee nuestra [Guía de Contribución](./CONTRIBUTING.md) antes de enviar un Pull Request.
+
+1. Fork del proyecto
+2. Crear una rama (`feature/increible-mejora`)
+3. Commit de tus cambios (`feat: add amazing feature`)
+4. Push a la rama (`git push origin feature/increible-mejora`)
+5. Abrir un Pull Request
 
 ---
 
